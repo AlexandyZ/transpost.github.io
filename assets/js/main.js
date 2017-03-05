@@ -80,44 +80,70 @@
 				$('#copyright').html('&copy; ' + time.getFullYear());
 			});
 
+		// Get all suitable buses/skytrains between current and destination
+
 			$("#submit").click(function(){
 
+				var t1 = 'http://api.translink.ca/rttiapi/v1/stops?apikey=Kwqwi28lOEd4VGhOV1G7&lat=';
+				var	t2 = '&long=';
+				var add = $('#destination').val();
+				var google = 'https://maps.googleapis.com/maps/api/geocode/json?address=';
+				var googleapi = 'Vancouver,+CANADA&key=AIzaSyAKaJIupFu06_xES1fWII_bzCgtW1Iwcb8';
+
+				var startstops = getStartStops(t1, t2);
+				var destinationstops = getDestinationStops(t1, t2, google, googleapi, add);
+
+				
+			});
+		
+		// Get all stops near start location
+
+			function getStartStops(trans1, trans2){
 				if (navigator.geolocation) {
 					navigator.geolocation.getCurrentPosition(getLocation);
 				} else {
-					//alert("no");
 					toastr.warning("Get Geolocation infomation failed.");
 				}
 				function getLocation(location){
 					lati = location.coords.latitude.toFixed(6);
 					long = location.coords.longitude.toFixed(6);
 					
-					var trans1 = 'http://api.translink.ca/rttiapi/v1/stops?apikey=Kwqwi28lOEd4VGhOV1G7&lat=';
-					var	trans2 = '&long=';
 					var transurl = trans1 + lati + trans2 + long;
 
 					$.ajax({
 						url: transurl,
 						dataType: 'json',
-						success:function(res){
-							//alert(res);
+						async: false,
+						success: function(res){
+							return res;
 						}
 					});		
 				}
+			}
+		
+		// Get all stops near destination
 
-				var add = $('#destination').val();
-				var google = 'https://maps.googleapis.com/maps/api/geocode/json?address=';
-				var googleapi = 'Vancouver,+CANADA&key=AIzaSyAKaJIupFu06_xES1fWII_bzCgtW1Iwcb8';
-
+			function getDestinationStops(trans1, trans2, google, googleapi, add){
 				$.ajax({
 					url: google + add + googleapi,
 					dataType: 'json',
-					success:function(res){
-						var rest = res.results[0].geometry.location;
-						alert(rest);
+					async: false,
+					success:function(res1){
+						var lati = res1.results[0].geometry.location.lat;
+						var long = res1.results[0].geometry.location.lng;
+						var transurl2 = trans1 + lati.toFixed(6) + trans2 + long.toFixed(6);
+						$.ajax({
+							url: transurl2,
+							dataType: 'json',
+							async : false,
+							success: function(res2){
+								return res2;
+								//alert(res2);
+							}
+						});
 					}
-				});	
-			});
+				});		
+			}
 
 		// Touch mode.
 			skel.on('change', function() {
@@ -159,57 +185,11 @@
 				);
 			});
 
-		// Gallery.
-			$window.on('load', function() {
-
-				var $gallery = $('.gallery');
-
-				$gallery.poptrox({
-					baseZIndex: 10001,
-					useBodyOverflow: false,
-					usePopupEasyClose: true,
-					usePopupForceClose: true,
-					overlayColor: '#1f2328',
-					overlayOpacity: 0.65,
-					usePopupDefaultStyling: false,
-					usePopupCaption: true,
-					popupLoaderText: '',
-					windowMargin: 50,
-					usePopupNav: true
-				});
-
-				// Hack: Adjust margins when 'small' activates.
-					skel
-						.on('-small', function() {
-							$gallery.each(function() {
-								$(this)[0]._poptrox.windowMargin = 50;
-							});
-						})
-						.on('+small', function() {
-							$gallery.each(function() {
-								$(this)[0]._poptrox.windowMargin = 5;
-							});
-						});
-
-			});
-
 		// Section transitions.
 			if (skel.canUse('transition')) {
 
 				var on = function() {
 
-					// Galleries.
-						$('.gallery')
-							.scrollex({
-								top:		'30vh',
-								bottom:		'30vh',
-								delay:		50,
-								initialize:	function() { $(this).addClass('inactive'); },
-								terminate:	function() { $(this).removeClass('inactive'); },
-								enter:		function() { $(this).removeClass('inactive'); },
-								leave:		function() { $(this).addClass('inactive'); }
-							});
-
 					// Generic sections.
 						$('.main.style1')
 							.scrollex({
@@ -231,24 +211,10 @@
 								leave:		function() { $(this).addClass('inactive'); }
 							});
 
-					// Contact.
-						$('#contact')
-							.scrollex({
-								top:		'50%',
-								delay:		50,
-								initialize:	function() { $(this).addClass('inactive'); },
-								terminate:	function() { $(this).removeClass('inactive'); },
-								enter:		function() { $(this).removeClass('inactive'); },
-								leave:		function() { $(this).addClass('inactive'); }
-							});
 				};
 
 				var off = function() {
 
-					// Galleries.
-						$('.gallery')
-							.unscrollex();
-
 					// Generic sections.
 						$('.main.style1')
 							.unscrollex();
@@ -256,9 +222,6 @@
 						$('.main.style2')
 							.unscrollex();
 
-					// Contact.
-						$('#contact')
-							.unscrollex();
 				};
 
 				skel.on('change', function() {
