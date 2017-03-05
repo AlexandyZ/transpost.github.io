@@ -93,8 +93,44 @@
 				var startstops = getStartStops(t1, t2);
 				var destinationstops = getDestinationStops(t1, t2, google, googleapi, add);
 
-				
+				var set1 = new Set();
+				var set2 = new Set();
+
+				for(var res in startstops){
+					var temp = res.Routes.split(", ");
+					for(var r in temp){
+						set1.add(r);
+					}
+				}
+
+				for(var res in destinationstops){
+					var temp = res.Routes.split(", ");
+					for(var r in temp){
+						set2.add(r);
+					}
+				}
+
+				Array.prototype.getDuplicates = function(arr2) {
+					var dup = {};
+					for (var i in this){
+						if(arr2.indexOf(this[i]) > -1){
+							dup.push(this[i]);
+						}
+					}
+					return dup;
+				}
+
+				return set1.getDuplicates(set2);
 			});
+
+		// Get the schedule for a specific bus
+			$("#busList").on('click', 'tr', function(e){
+				e.preventDefault();
+				var bus = $(this).attr('value');
+
+				var trans3 = 'http://api.translink.ca/rttiapi/v1/buses?apikey=Kwqwi28lOEd4VGhOV1G7&stopNo=';
+				var trans4 = '&routeNo=';
+			})	
 		
 		// Get all stops near start location
 
